@@ -1,5 +1,6 @@
 import type { MarketEvent } from "./types";
 import { detectRelatedTickers } from "./tickers";
+import { translateMarketText } from "./translation";
 
 const REMARKS_URL = "https://www.whitehouse.gov/remarks/";
 
@@ -27,7 +28,14 @@ async function enrichDetail(event: MarketEvent): Promise<MarketEvent> {
     const articleMatch = html.match(/<article[^>]*>([\\s\\S]*?)<\\/article>/i) ?? html.match(/<main[^>]*>([\\s\\S]*?)<\\/main>/i);
     const originalText = articleMatch ? cleanText(articleMatch[1]).slice(0, 16000) : null;
     if (!originalText) return event;
-    return { ...event, originalText, relatedTickers: detectRelatedTickers(event.title + " " + originalText) };
+    const translated = await translateMarketText(event.title, originalText);
+    return {
+      ...event,
+      originalText,
+      japaneseTranslation: translated.translation,
+      japaneseSummary: translated.summary,
+      relatedTickers: detectRelatedTickers(event.title + " " + originalText)
+    };
   } catch {
     return event;
   }

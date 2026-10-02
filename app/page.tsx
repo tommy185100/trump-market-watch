@@ -76,8 +76,8 @@ export default async function Home() {
               <div className="cardTop">
                 <div>
                   <span className="badge blue">COMMENT</span>
-                  <span className="ticker">TRUMP</span>
-                  <span className="company">Official remarks</span>
+                  <span className="ticker">{event.relatedTickers[0]?.ticker ?? "TRUMP"}</span>
+                  <span className="company">{event.relatedTickers.length ? event.relatedTickers.map(t => t.companyName).join(" / ") : "Official remarks"}</span>
                 </div>
                 <div className="timeBox">
                   <strong>{formatJst(event.actualEventAtJst)}</strong>
@@ -94,7 +94,7 @@ export default async function Home() {
                   </div>
                   <div className="block muted">
                     <label>🇺🇸 原文</label>
-                    <p>{event.originalText ?? "詳細ページ本文の取得は次段階で接続"}</p>
+                    <p>{event.originalText ? event.originalText.slice(0, 1800) : "本文を取得できませんでした"}</p>
                   </div>
                   <div className="source">
                     出典: <a href={event.sourceUrl} target="_blank" rel="noreferrer">{event.sourceName}</a>
@@ -103,7 +103,7 @@ export default async function Home() {
                 </div>
 
                 <div className="marketCol">
-                  <div className="marketRow"><span>関連Ticker</span><strong>解析前</strong></div>
+                  <div className="marketRow"><span>関連Ticker</span><strong>{event.relatedTickers.length ? event.relatedTickers.map(t => t.ticker).join(", ") : "検出なし"}</strong></div>
                   <div className="marketRow"><span>発言時</span><strong>—</strong></div>
                   <div className="marketRow"><span>5分後</span><strong>—</strong></div>
                   <div className="marketRow"><span>30分後</span><strong>—</strong></div>

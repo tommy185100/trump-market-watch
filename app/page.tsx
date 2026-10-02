@@ -87,10 +87,10 @@ export default async function Home() {
 
               <div className="grid">
                 <div className="contentCol">
-                  <div className="summary">{event.title}</div>
+                  <div className="summary">{event.japaneseSummary ?? event.title}</div>
                   <div className="block">
                     <label>🇯🇵 日本語訳</label>
-                    <p>{event.japaneseTranslation ?? "翻訳処理：未接続"}</p>
+                    <p>{event.japaneseTranslation ?? "翻訳API未設定、または翻訳処理に失敗しました"}</p>
                   </div>
                   <div className="block muted">
                     <label>🇺🇸 原文</label>

@@ -1,4 +1,5 @@
 import type { MarketEvent } from "./types";
+import { detectRelatedTickers } from "./tickers";
 
 const REMARKS_URL = "https://www.whitehouse.gov/remarks/";
 
@@ -13,6 +14,23 @@ function cleanText(value: string) {
     .replace(/&quot;/g, '"')
     .replace(/\s+/g, " ")
     .trim();
+}
+
+async function enrichDetail(event: MarketEvent): Promise<MarketEvent> {
+  try {
+    const response = await fetch(event.sourceUrl, {
+      headers: { "User-Agent": "TrumpMarketWatch/0.1 (+public-information-monitor)" },
+      next: { revalidate: 60 }
+    });
+    if (!response.ok) return event;
+    const html = await response.text();
+    const articleMatch = html.match(/<article[^>]*>([\\s\\S]*?)<\\/article>/i) ?? html.match(/<main[^>]*>([\\s\\S]*?)<\\/main>/i);
+    const originalText = articleMatch ? cleanText(articleMatch[1]).slice(0, 16000) : null;
+    if (!originalText) return event;
+    return { ...event, originalText, relatedTickers: detectRelatedTickers(event.title + " " + originalText) };
+  } catch {
+    return event;
+  }
 }
 
 export async function fetchWhiteHouseRemarks(): Promise<MarketEvent[]> {
@@ -60,6 +78,7 @@ export async function fetchWhiteHouseRemarks(): Promise<MarketEvent[]> {
       originalText: null,
       japaneseTranslation: null,
       japaneseSummary: null,
+      relatedTickers: [],
       verificationStatus: "timestamp_unverified",
       detectedAt: new Date().toISOString()
     });
@@ -67,5 +86,6 @@ export async function fetchWhiteHouseRemarks(): Promise<MarketEvent[]> {
     if (events.length >= 20) break;
   }
 
-  return events;
+  const enriched = await Promise.all(events.slice(0, 10).map(enrichDetail));
+  return [...enriched, ...events.slice(10)];
 }
